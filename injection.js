@@ -761,47 +761,19 @@ function modifyCode(text) {
 			new Module("InvWalk", function() {});
 			new Module("KeepSprint", function() {});
 			new Module("NoSlowdown", function() {});
-			
-			// NoFall
-			new Module("NoFall", function() {});
+
+			new Module("NoFall", function(callback) {
 				if (callback) {
 					let ticks = 0;
-					let slowFall = false;
-					let fallDuration = 0.01;
-					let slowFallSpeed = 0.1;
-					let originalFallSpeed = 0.5;
-					
 					tickLoop["NoFall"] = function() {
-						// ray = rayTraceBlocks(player$1.getEyePos(), player$1.getEyePos().clone.setY(0), false, false, false, game$1.world);
-						
-						if (player$1.fallDistance > 4) {
-							if (!slowFall) {
-								player$1.motionY = -slowFallSpeed;
-								
-								setTimeout(() => {
-									slowFall = true;
-									player$1.motionY = -originalFallSpeed;
-								}, fallDuration * 1000);
-							} else {
-								player$1.motionY = -originalFallSpeed;
-								slowFall = false;
-							}
-							
-							ClientSocket.sendPacket(new SPacketPlayerPosLook({
-								pos: {
-									x: player$1.pos.x,
-									y: player$1.pos.y,
-									z: player$1.pos.z
-								},
-								
-								onGround: true
-							}));
+        				const ray = rayTraceBlocks(player$1.getEyePos(), player$1.getEyePos().clone().setY(0), false, false, false, game$1.world);
+						if (player$1.fallDistance > 2.5 && ray) {
+							ClientSocket.sendPacket(new SPacketPlayerPosLook({pos: {x: player$1.pos.x, y: ray.hitVec.y, z: player$1.pos.z}, onGround: true}));
 							player$1.fallDistance = 0;
 						}
 					};
-				} else {
-					delete tickLoop["NoFall"];
 				}
+				else delete tickLoop["NoFall"];
 			});
 
 			// Speed
@@ -821,7 +793,7 @@ function modifyCode(text) {
 				}
 				else delete tickLoop["Speed"];
 			});
-			speedvalue = speed.addoption("Speed", Number, 1.2);
+			speedvalue = speed.addoption("Speed", Number, 1.5);
 			speedjump = speed.addoption("JumpHeight", Number, 0.42);
 			speedauto = speed.addoption("AutoJump", Boolean, true);
 
