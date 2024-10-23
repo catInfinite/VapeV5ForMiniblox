@@ -802,7 +802,7 @@ function modifyCode(text) {
 				} else {
 					delete tickLoop["NoFall"];
 				}
-		});
+			});
 
 			// Speed
 			let speedvalue, speedjump, speedauto;
