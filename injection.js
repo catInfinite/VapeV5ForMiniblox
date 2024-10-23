@@ -762,19 +762,43 @@ function modifyCode(text) {
 			new Module("KeepSprint", function() {});
 			new Module("NoSlowdown", function() {});
 
-			// NoFall
 			new Module("NoFall", function(callback) {
-				if (callback) {
-					let ticks = 0;
-					tickLoop["NoFall"] = function() {
-        				const ray = rayTraceBlocks(player$1.getEyePos(), player$1.getEyePos().clone().setY(0), false, false, false, game$1.world);
-						if (player$1.fallDistance > 2.5 && ray) {
-							ClientSocket.sendPacket(new SPacketPlayerPosLook({pos: {x: player$1.pos.x, y: ray.hitVec.y, z: player$1.pos.z}, onGround: true}));
-							player$1.fallDistance = 0;
-						}
-					};
-				}
-				else delete tickLoop["NoFall"];
+    				if (callback) {
+        				let ticks = 0;
+        				let slowFall = false;
+        				let fallDuration = 0.1; 
+        				let slowFallSpeed = 0.1; 
+        				let originalFallSpeed = 0.5; 
+
+        				tickLoop["NoFall"] = function() {
+            					const ray = rayTraceBlocks(player$1.getEyePos(), player$1.getEyePos().clone().setY(0), false, false, false, game$1.world);
+            
+            					if (player$1.fallDistance > 4 && ray) {
+                					if (!slowFall) {
+                    						player$1.motionY = -slowFallSpeed;
+                    						setTimeout(() => {
+                        						slowFall = false;
+                        						player$1.motionY = -originalFallSpeed;
+                    						}, fallDuration * 1000);
+                					} else {
+                    						player$1.motionY = -originalFallSpeed;
+                    						slowFall = true; 
+                					}
+
+                					ClientSocket.sendPacket(new SPacketPlayerPosLook({
+                    						pos: {
+                        						x: player$1.pos.x,
+                        						y: ray.hitVec.y,
+                        						z: player$1.pos.z
+                    						},
+                    					onGround: true
+                				}));
+                				player$1.fallDistance = 0; 
+            				}
+        			};
+    			} else {
+        			delete tickLoop["NoFall"];
+    			}
 			});
 
 			// Speed
